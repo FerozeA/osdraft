@@ -1,17 +1,20 @@
 # osdraft
 
 NFC tag redirect service. Each physical NFC tag is programmed with a unique URL
-(`https://osdraft.com/tag/[unique-id]`). The first person to tap an unclaimed tag
-fills in a short form choosing where the tag should point; every tap after that
-instantly redirects to the saved destination.
+(`https://feroze.work/tag/[unique-id]`). The first person to tap an unclaimed tag
+fills in a short setup form; every tap after that instantly redirects to the
+saved destination.
 
 ## Routes
 
 | Route | Purpose |
 | --- | --- |
-| `/tag/[id]` | Redirects if claimed; shows the claim form if not |
+| `/tag/[id]` | Redirects if claimed; shows the setup form if not |
 | `/tag/[id]/update` | Lets the owner change the destination after verifying name + email/phone |
 | `/admin/create-tag` | Register a new tag ID as unclaimed (no auth — see note below) |
+| `/osdocs` | Open-source documentation table of contents |
+| `/osdocs/[product]` | A specific product's documentation page |
+| `/api/keepalive` | Lightweight DB ping to stop Supabase free tier from pausing |
 
 ## Tech stack
 
@@ -51,7 +54,7 @@ npm run dev
 ```
 
 Open http://localhost:3000/admin/create-tag, create a tag (e.g. `test1`), then
-visit http://localhost:3000/tag/test1 to walk through the claim flow.
+visit http://localhost:3000/tag/test1 to walk through the setup flow.
 
 ## 4. Deploy to Vercel
 
@@ -65,25 +68,53 @@ visit http://localhost:3000/tag/test1 to walk through the claim flow.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. Deploy.
 
-## 5. Point osdraft.com at Vercel
+## 5. Domain (feroze.work)
 
-1. In your Vercel project, go to **Settings → Domains** and add `osdraft.com`
-   (and `www.osdraft.com` if you want it).
-2. Vercel will show you the DNS records to add at your domain registrar:
-   - **Apex domain (`osdraft.com`)**: an `A` record pointing to `76.76.21.21`
-     (use the exact IP Vercel shows you — it can change).
-   - **`www` subdomain**: a `CNAME` record pointing to `cname.vercel-dns.com`.
-   - Alternatively, switch the domain's nameservers to Vercel's
-     (`ns1.vercel-dns.com`, `ns2.vercel-dns.com`) and Vercel manages DNS for you.
-3. Wait for DNS to propagate (usually minutes, up to 48h). Vercel provisions
-   the SSL certificate automatically.
+The app is domain-agnostic — it shows whatever domain it's served from. If
+`feroze.work` is already connected to this Vercel project, you're done; tags
+live at `https://feroze.work/tag/[id]`.
 
-## Workflow for new NFC tags
+To connect the domain (if not already):
 
-1. Visit `https://osdraft.com/admin/create-tag` and enter a unique ID
+1. In your Vercel project, go to **Settings → Domains** and add `feroze.work`.
+2. Add the DNS records Vercel shows you at your registrar:
+   - **Apex (`feroze.work`)**: an `A` record to the IP Vercel displays.
+   - **`www`** (optional): a `CNAME` to `cname.vercel-dns.com`.
+3. Vercel provisions SSL automatically once DNS resolves.
+
+## 6. Keep Supabase from pausing (free tier)
+
+Supabase pauses free-tier projects after **7 days of inactivity**, which would
+break all redirects until you manually restore it. To prevent that, the
+`/api/keepalive` route runs a tiny query to register activity. A Vercel Cron
+(see [`vercel.json`](vercel.json)) hits it once a day automatically.
+
+- **Vercel Cron** runs only on production deployments. After deploying, confirm
+  it under **Settings → Cron Jobs**.
+- *(Optional)* set a `CRON_SECRET` env var in Vercel to lock the endpoint;
+  Vercel sends it automatically on scheduled runs.
+- **Alternative:** a free external monitor (UptimeRobot, cron-job.org) pinging
+  `https://feroze.work/api/keepalive` every few days does the same job.
+
+Note: physically programming an NFC tag does **not** count as activity — only
+database reads/writes (tag taps, creating tags, the keep-alive ping) do.
+
+## Open-source documentation pages
+
+- `/osdocs` is a text table of contents listing every product's docs.
+- Each product has its own page at `/osdocs/[product]`, e.g.
+  `app/osdocs/dogtagv1/page.tsx` → `/osdocs/dogtagv1`.
+- To add a product page, create `app/osdocs/<slug>/page.tsx` and add a line to
+  the `docs` array in [`app/osdocs/page.tsx`](app/osdocs/page.tsx).
+
+## Order of operations for shipping a tag
+
+1. Visit `https://feroze.work/admin/create-tag` and enter a unique ID
    (letters, numbers, hyphens, underscores).
-2. Program the physical NFC tag with `https://osdraft.com/tag/<that-id>`.
-3. Ship it. The first tap shows the setup form; after that, taps redirect.
+2. Program the physical NFC tag with `https://feroze.work/tag/<that-id>`.
+3. Ship it. On first tap the customer fills in the setup form and submits; they
+   see a success message, a short countdown, then the product's open-source
+   documentation. Every later tap redirects to their saved destination.
 
 ## Security notes (current limitations)
 

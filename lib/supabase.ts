@@ -24,6 +24,7 @@ export type Tag = {
   email: string | null;
   phone: string | null;
   destination_url: string | null;
+  product: string | null;
   claimed: boolean;
   created_at: string;
 };

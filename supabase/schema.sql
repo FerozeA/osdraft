@@ -7,9 +7,15 @@ create table if not exists public.tags (
   email text,
   phone text,
   destination_url text,
+  product text,
   claimed boolean not null default false,
   created_at timestamptz not null default now()
 );
+
+-- Safe to run on an existing table: adds the product column if it isn't there
+-- yet (e.g. for tables created before products were introduced). Additive only,
+-- so it never touches existing rows or their data.
+alter table public.tags add column if not exists product text;
 
 -- Row Level Security: the app uses the anon key, so allow the anon role
 -- to read, insert, and update rows. (There is no auth in this app yet —

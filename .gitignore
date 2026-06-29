@@ -6,3 +6,7 @@ out/
 .vercel
 *.tsbuildinfo
 next-env.d.ts
+
+# Internal business/brand context — keep out of the repo so it isn't pushed.
+# Remove this line if you intentionally want it tracked.
+OS_Draft_Context.md

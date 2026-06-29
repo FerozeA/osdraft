@@ -1,8 +1,16 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
-export default function ClaimForm({ tagId }: { tagId: string }) {
+const COUNTDOWN_SECONDS = 10;
+
+export default function ClaimForm({
+  tagId,
+  product,
+}: {
+  tagId: string;
+  product: string | null;
+}) {
   const [name, setName] = useState("");
   const [contactMethod, setContactMethod] = useState<"email" | "phone">(
     "email"
@@ -11,6 +19,24 @@ export default function ClaimForm({ tagId }: { tagId: string }) {
   const [destinationUrl, setDestinationUrl] = useState("");
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState("");
+  const [done, setDone] = useState(false);
+  const [seconds, setSeconds] = useState(COUNTDOWN_SECONDS);
+
+  // Product docs to send the customer to after setup. Falls back to the docs
+  // index if a tag somehow has no product set.
+  const docsUrl = product ? `/osdocs/${product}` : "/osdocs";
+
+  // After a successful setup, count down and then redirect this tab to the
+  // product's open-source documentation.
+  useEffect(() => {
+    if (!done) return;
+    if (seconds <= 0) {
+      window.location.href = docsUrl;
+      return;
+    }
+    const timer = setTimeout(() => setSeconds((s) => s - 1), 1000);
+    return () => clearTimeout(timer);
+  }, [done, seconds, docsUrl]);
 
   const canSubmit =
     name.trim() !== "" &&
@@ -44,11 +70,33 @@ export default function ClaimForm({ tagId }: { tagId: string }) {
         return;
       }
 
-      window.location.href = data.destination_url;
+      setDone(true);
     } catch {
       setError("Something went wrong. Please try again.");
       setSubmitting(false);
     }
+  }
+
+  if (done) {
+    return (
+      <div>
+        <p className="message">
+          Setup complete. Your tag is now active and will redirect to your link
+          on every future tap.
+        </p>
+        <p className="countdown">
+          Opening the documentation in <strong>{seconds}</strong> second
+          {seconds === 1 ? "" : "s"}…
+        </p>
+        <a
+          className="btn"
+          href={docsUrl}
+          style={{ textDecoration: "none", textAlign: "center" }}
+        >
+          Open now
+        </a>
+      </div>
+    );
   }
 
   return (

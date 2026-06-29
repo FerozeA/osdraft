@@ -1,8 +1,9 @@
 import { NextResponse } from "next/server";
 import { getSupabase } from "@/lib/supabase";
+import { isKnownProduct } from "@/lib/products";
 
 export async function POST(req: Request) {
-  let body: { id?: string };
+  let body: { id?: string; product?: string };
   try {
     body = await req.json();
   } catch {
@@ -10,6 +11,7 @@ export async function POST(req: Request) {
   }
 
   const id = body.id?.trim();
+  const product = body.product?.trim();
 
   if (!id) {
     return NextResponse.json(
@@ -25,11 +27,18 @@ export async function POST(req: Request) {
     );
   }
 
+  if (!product || !isKnownProduct(product)) {
+    return NextResponse.json(
+      { error: "Please choose a valid product for this tag." },
+      { status: 400 }
+    );
+  }
+
   const supabase = getSupabase();
 
   const { error } = await supabase
     .from("tags")
-    .insert({ id, claimed: false });
+    .insert({ id, product, claimed: false });
 
   if (error) {
     if (error.code === "23505") {

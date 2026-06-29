@@ -65,7 +65,7 @@ export default async function TagPage({
       <div className="card">
         <h1>Set up your tag</h1>
         <p className="subtext">Choose where this tag points</p>
-        <ClaimForm tagId={id} />
+        <ClaimForm tagId={id} product={tag.product} />
       </div>
     </main>
   );
