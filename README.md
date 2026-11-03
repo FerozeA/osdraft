@@ -1,7 +1,9 @@
+## Technology concept for Open-Source clothing brand concept
+
 # osdraft
 
 NFC tag redirect service. Each physical NFC tag is programmed with a unique URL
-(`https://feroze.work/tag/[unique-id]`). The first person to tap an unclaimed tag
+(`https://xyz/tag/[unique-id]`). The first person to tap an unclaimed tag
 fills in a short setup form; every tap after that instantly redirects to the
 saved destination.
 
@@ -68,19 +70,9 @@ visit http://localhost:3000/tag/test1 to walk through the setup flow.
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
 4. Deploy.
 
-## 5. Domain (feroze.work)
+## 5. Domain
 
-The app is domain-agnostic — it shows whatever domain it's served from. If
-`feroze.work` is already connected to this Vercel project, you're done; tags
-live at `https://feroze.work/tag/[id]`.
-
-To connect the domain (if not already):
-
-1. In your Vercel project, go to **Settings → Domains** and add `feroze.work`.
-2. Add the DNS records Vercel shows you at your registrar:
-   - **Apex (`feroze.work`)**: an `A` record to the IP Vercel displays.
-   - **`www`** (optional): a `CNAME` to `cname.vercel-dns.com`.
-3. Vercel provisions SSL automatically once DNS resolves.
+The app is domain-agnostic — it shows whatever domain it's served from.
 
 ## 6. Keep Supabase from pausing (free tier)
 
@@ -94,7 +86,7 @@ break all redirects until you manually restore it. To prevent that, the
 - *(Optional)* set a `CRON_SECRET` env var in Vercel to lock the endpoint;
   Vercel sends it automatically on scheduled runs.
 - **Alternative:** a free external monitor (UptimeRobot, cron-job.org) pinging
-  `https://feroze.work/api/keepalive` every few days does the same job.
+  `https://xyz/api/keepalive` every few days does the same job.
 
 Note: physically programming an NFC tag does **not** count as activity — only
 database reads/writes (tag taps, creating tags, the keep-alive ping) do.
@@ -109,9 +101,9 @@ database reads/writes (tag taps, creating tags, the keep-alive ping) do.
 
 ## Order of operations for shipping a tag
 
-1. Visit `https://feroze.work/admin/create-tag` and enter a unique ID
+1. Visit `https://xyz/admin/create-tag` and enter a unique ID
    (letters, numbers, hyphens, underscores).
-2. Program the physical NFC tag with `https://feroze.work/tag/<that-id>`.
+2. Program the physical NFC tag with `https://xyz/tag/<that-id>`.
 3. Ship it. On first tap the customer fills in the setup form and submits; they
    see a success message, a short countdown, then the product's open-source
    documentation. Every later tap redirects to their saved destination.
